@@ -124,7 +124,13 @@
                   :style="Object.assign(cellStyle(record, item), renderColumnCellStyle(item, record))"
                   @mouseover="cellMouseOver"
                   @mousemove="cellMouseMove">
-                  <template v-if="item.format=='html'"><span v-html="item.toText(record[item.name], record, item, p)" /></template>
+                  <slot
+                    v-if="item.type === 'custom'"
+                    :name="item.slotName || item.name"
+                    :item="item"
+                    :record="record">
+                  </slot>
+                  <template v-else-if="item.format=='html'"><span v-html="item.toText(record[item.name], record, item, p)" /></template>
                   <template v-else>{{ item.toText(record[item.name], record, item, p) }}</template>
                 </td>
               <td v-if="vScroller.buttonHeight < vScroller.height" class="last-col"></td>
@@ -300,7 +306,7 @@ export default defineComponent({
     'date-picker': DatePicker
   },
   props: {
-      disablePanelSetting: {
+    disablePanelSetting: {
       type: Boolean,
       default() {
         return false;
@@ -405,6 +411,10 @@ export default defineComponent({
       default () {
         return true
       }
+    },
+    beforeUpdate: {
+      type: Function,
+      default: null
     }
   },
   data () {
@@ -738,7 +748,8 @@ export default defineComponent({
         summary: null,
         toValue: t => t,
         toText: t => t,
-        register: null
+        register: null,
+        slotName: null
       }
       if (this.addColumn) colDef = this.addColumn(colDef)
       this.newColumn(colDef, pos)
@@ -782,7 +793,8 @@ export default defineComponent({
           sort: null,
           toValue: t => t,
           toText: t => t,
-          register: null
+          register: null,
+          slotName: null
         })
       })
     },
@@ -2580,9 +2592,16 @@ export default defineComponent({
         this.showDatePickerDiv()
       }
     },
-    inputCellWrite (setText, colPos, recPos) {
+    async inputCellWrite (setText, colPos, recPos) {
       let field = this.currentField
       if (typeof colPos !== 'undefined') field = this.fields[colPos]
+
+      if (this.beforeUpdate) {
+        const result = await this.beforeUpdate(field, setText, this.selected);
+
+        if (result === false) return;
+      }
+
       if (typeof recPos === 'undefined') recPos = this.pageTop + this.currentRowPos
       if (!this.noMassUpdate && typeof this.selected[recPos] !== 'undefined')
         this.updateSelectedRows(field, setText)
@@ -2804,7 +2823,7 @@ export default defineComponent({
     validateAll() {
       this.errmsg = {}
       this.rowerr = {}
-      return Promise.all(this.table.map(row => 
+      return Promise.all(this.table.map(row =>
         Promise.all(Object.keys(row).map(name => this.updateCell(row, name, row[name], false))
       )))
     },

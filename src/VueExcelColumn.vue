@@ -134,7 +134,11 @@ export default {
         }
       }
     },
-    register: {type: Function, default: null}
+    register: { type: Function, default: null },
+    slotName: {
+      type: String,
+      default: null
+    }
   },
   created () {
     this.init()
@@ -231,6 +235,8 @@ export default {
           this._format = 'html'
           style.textAlign = 'center'
           break
+        case 'custom':
+          break
         default:
           throw new Error('VueExcelColumn: Not supported type:' + this.type)
       }
@@ -301,7 +307,8 @@ export default {
         color: this.color || this._color,
         bgcolor: this.bgcolor || this._bgcolor,
         hideDuplicate: this.hideDuplicate || this.grouping,
-        grouping: this.grouping
+        grouping: this.grouping,
+        slotName: this.slotName
       })
     }
   }
