@@ -561,7 +561,7 @@ export default defineComponent({
           this.clearFilter()
           this.sortPos = 0
           this.sortDir = 0
-        } 
+        }
         this.refresh()
         if (this.pageTop > this.table.length)
           this.lastPage()
@@ -2367,7 +2367,7 @@ export default defineComponent({
       }
       return false
     },
-    mouseDown (e) {
+    async mouseDown (e) {
       if (e.target.parentNode.parentNode.tagName === 'TBODY' && !e.target.classList.contains('first-col')) {
         e.preventDefault()
         const row = e.target.parentNode
@@ -2375,7 +2375,7 @@ export default defineComponent({
         const rowPos = Array.from(row.parentNode.children).indexOf(row)
 
         if (colPos !== this.currentColPos || rowPos !== this.currentRowPos)
-          this.inputBoxBlur()
+          await this.inputBoxBlur()
 
         this.currentField = this.fields[colPos]
         this.currentCell = row.children[colPos + 1]
@@ -2615,25 +2615,25 @@ export default defineComponent({
       else
         this.updateCell(recPos, field, field.toValue(setText, this.table[recPos], field))
     },
-    inputBoxBlur () {
+    async inputBoxBlur () {
       if (!this.$refs.dpContainer) return
       if (this.$refs.dpContainer.querySelector(':hover')) return
-      this.inputBoxComplete()
+      await this.inputBoxComplete()
       this.focused = false
 
       this.$emit('cell-blur', {rowPos: this.currentRowPos, colPos: this.currentColPos, cell: this.lastCell, record: this.lastRecord})
-  
+
       if (this.currentRowPos !== -1 && this.currentRowPos < this.recordBody.children.length) {
         this.recordBody.children[this.currentRowPos].children[0].classList.remove('focus')
         this.labelTr.children[this.currentColPos + 1].classList.remove('focus')
       }
       this.lastCell?.classList.remove('focus')
     },
-    inputBoxComplete () {
+    async inputBoxComplete () {
       if (this.inputBoxChanged) {
         const value = this.inputBox._value || this.inputBox.value
         this.inputBox._value = ''
-        this.inputCellWrite(value)
+        await this.inputCellWrite(value)
         this.inputBoxChanged = false
       }
       this.inputBoxShow = 0
